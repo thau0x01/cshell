@@ -101,7 +101,7 @@ char **cshell_split_line(char *line)
 {
   int buffsize = CSHELL_TOK_BUFFSIZE, position = 0;
   char **tokens = malloc(buffsize * sizeof(char *));
-  char *token;
+  char *token, **tokens_backup;
 
   if (!tokens)
   {
@@ -117,9 +117,11 @@ char **cshell_split_line(char *line)
     if (position >= buffsize)
     {
       buffsize += CSHELL_TOK_BUFFSIZE;
+      tokens_backup = tokens;
       tokens = realloc(tokens, buffsize * sizeof(char *));
       if (!tokens)
       {
+        free(tokens_backup);
         fprintf(stderr, "CSHELL: erro de alocação!\n");
         exit(EXIT_FAILURE);
       }
@@ -136,7 +138,7 @@ char **cshell_split_line(char *line)
  */
 int cshell_launch(char **args)
 {
-  pid_t pid, wpid;
+  pid_t pid;
   int status;
 
   pid = fork();
@@ -159,7 +161,7 @@ int cshell_launch(char **args)
     // parent process
     do
     {
-      wpid = waitpid(pid, &status, WUNTRACED);
+      waitpid(pid, &status, WUNTRACED);
     } while (!WIFEXITED(status) && !WIFSIGNALED(status));
   }
   return 1;
